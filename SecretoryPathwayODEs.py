@@ -44,71 +44,74 @@ k_13     = 12.2      # μM⁻¹h⁻¹   Plasma membrane to extracellular Col-I t
 k_14     = 1.22      # μM⁻¹h⁻¹   CTSK-dependent extracellular Col-I degradation rate
 k_16     = 1.22      # μM⁻¹h⁻¹   Golgi to ER HSP47 transition rate
 k_plus9  = 0.356     # μM⁻²h⁻¹   Col-I-HSP47 complex association rate
-G_bar    = 1.0       # Unitless  Mean pulse function value determined by mean value theorem
+G_bar    = 2.0       # Unitless  Mean pulse function value determined by mean value theorem
 #t_0                  # h         Phase
 
 
 def F(t,t_0):
-      global t_bar
-      return 0.5*cos(2.0*pi*(t-t_0)/t_bar)+1.0
+    output = 0.5*cos(2.0*pi*(t-t_0)/t_bar)+1.0
+    return output
 
 
-cos_e = cos(exp(1))
-cos_minus_e = cos(exp(-1))
+#cos_e = cos(exp(1))
+#cos_minus_e = cos(exp(-1))
 def G(t,t_0):
-      global G_bar
-      global t_bar
-      timedependentcomponent = cos(exp(cos(2.0*pi*(t-t_0)/t_bar)))
-      return (((cos_minus_e - timedependentcomponent)/(cos_minus_e-cos_e))**4)/G_bar
+    timedependentcomponent = cos(exp(cos(2.0*pi*(t-t_0)/t_bar)))
+    numerator = cos(exp(-1.0)) - timedependentcomponent
+    denominator = cos(exp(-1.0)) - cos(exp(1))
+    output = ((numerator/denominator)**4)/G_bar
+    return output
 
 def SecretoryPathwayODEs(y,t):
-      C_ER = y[0]
-      C_H  = y[1]
-      C_G  = y[2]
-      C_PG = y[3]
-      C_PM = y[4]
-      C_E  = y[5]
-      H_ER = y[6]
-      H_G  = y[7]
-      K    = y[8]
-      S    = y[9]
-      T    = y[10]
-      P    = y[11]
-      V    = y[12]
-      M    = y[13]
-      D    = y[14]
+    C_ER = y[0]
+    C_H  = y[1]
+    C_G  = y[2]
+    C_PG = y[3]
+    C_PM = y[4]
+    C_E  = y[5]
+    H_ER = y[6]
+    H_G  = y[7]
+    K    = y[8]
 
-      dC_ERdt     = k_8*S - k_plus9*C_ER*T*H_ER + k_minus9*C_H*T
-      dC_Hdt      = k_plus9*C_ER*T*H_ER - k_minus9*C_H*T - k_10*C_H
-      dC_Gdt      = k_10*C_H - k_11*C_G*V
-      dC_PGdt     = k_11*C_G*V - k_12*C_G*V
-      dC_PMdt     = k_12*C_PG - k_13*C_PM*M
-      dC_Edt      = k_13*C_PM*M - k_14*D*C_E
-      dH_ERdt     = k_4a*S - k_4b*H_ER - k_plus9*C_ER*T*H_ER + k_minus9*C_H*T + k_16*H_G*K
-      dH_Gdt      = k_10*C_H - k_16*H_G*K - k_4c*H_G
-      dKdt        = k_5a*S/(1+k_5c*P) - k_5b*K
-      dSdt        = k_1*F(t,3.0)
-      dTdt        = k_2*G(t,9.0)
-      dPdt        = k_3*F(t,19.0)
-      dVdt        = k_6*F(t,19.0)
-      dMdt        = k_7*G(t,3.0)
-      dDdt        = k_15*F(t,9.0)
+    S = k_1*F(t,3.0)
+    T = k_2*G(t,9.0)
+    P = k_3*F(t,19.0)
+    V = k_6*F(t,19.0)
+    M = k_7*G(t,3.0)
+    D = k_15*F(t,9.0)
 
-      x = np.array([dC_ERdt,dC_Hdt,dC_Gdt,dC_PGdt,dC_PMdt,dC_Edt,dH_ERdt,dH_Gdt,dKdt,dSdt,dTdt,dPdt,dVdt,dMdt,dDdt])
 
-      return x
+    dC_ERdt     = k_8*S - k_plus9*C_ER*T*H_ER + k_minus9*C_H*T
+    dC_Hdt      = k_plus9*C_ER*T*H_ER - k_minus9*C_H*T - k_10*C_H
+    dC_Gdt      = k_10*C_H - k_11*C_G*V
+    dC_PGdt     = k_11*C_G*V - k_12*C_PG
+    dC_PMdt     = k_12*C_PG - k_13*C_PM*M
+    dC_Edt      = k_13*C_PM*M - k_14*D*C_E
+    dH_ERdt     = k_4a*S - k_4b*H_ER - k_plus9*C_ER*T*H_ER + k_minus9*C_H*T + k_16*H_G*K
+    dH_Gdt      = k_10*C_H - k_16*H_G*K - k_4c*H_G
+    dKdt        = k_5a*S/(1+k_5c*P) - k_5b*K
 
-#%%
+    x = np.array([dC_ERdt,dC_Hdt,dC_Gdt,dC_PGdt,dC_PMdt,dC_Edt,dH_ERdt,dH_Gdt,dKdt])
+
+    return x
+
+
 # Initial conditions
-ndays = 100
-y0 = np.zeros(15)
+ndays = 160
+y0 = np.zeros(9)
 t = np.linspace(0,24*ndays,1000*ndays)
 
 output = odeint(SecretoryPathwayODEs,y0,t[1:])
 
+names = ["C_ER","C_H ","C_G ","C_PG","C_PM","C_E ","H_ER","H_G ","K   "]
+
 fig,ax = plt.subplots()
 
 for i in range(np.shape(y0)[0]):
-    ax.plot(t[1:],output[:,i])
+    ax.plot(t[1:],output[:,i],label=names[i])
 
+ax.set_ylim([0,10])
+ax.set_xlim([0,3600])
+ax.legend()
+plt.savefig("/Users/christopher/Desktop/test.png",dpi=500,bbox_inches='tight',padding_inches=0)
 plt.show()
