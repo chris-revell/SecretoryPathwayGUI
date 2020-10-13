@@ -17,7 +17,7 @@ edgeLabels = {("ER","Golgi"):"$k_1$",("Golgi","ER"):"$k_2$",("Golgi","Extracellu
 Graph.add_edges_from(edges)
 fixedpos = nx.shell_layout(Graph)
 
-ks = np.zeros(nEdges)
+ks = np.zeros(nEdges)+0.5
 
 def SecretoryPathwayODEs(y,t):
     C_ER = y[0]
@@ -41,10 +41,6 @@ def SecretoryPathwayODEs(y,t):
 fig,ax=plt.subplots()
 plt.subplots_adjust(left=0.1,bottom=0.5)
 
-nx.draw(Graph,ax=ax,pos=fixedpos,width=3,with_labels=True)
-nx.draw_networkx_edges(Graph,ax=ax,pos=fixedpos,width=ks[1:])
-nx.draw_networkx_edge_labels(Graph,pos=fixedpos,edge_labels=edgeLabels,font_color='red')
-
 sliders = []
 axSliders = []
 #Create sliders to vary k values
@@ -63,8 +59,10 @@ dt = 1
 ts = np.arange(0,96,dt)
 output = np.zeros([20,nNodes])
 
-print(Graph.nodes())
-print(Graph.nodes())
+nx.draw_networkx_nodes(Graph,ax=ax,pos=fixedpos,node_size=output[-1,:6]*5000)
+nx.draw_networkx_labels(Graph,ax=ax,pos=fixedpos)
+nx.draw_networkx_edges(Graph,ax=ax,pos=fixedpos,width=ks*10,arrowstyle="fancy")
+nx.draw_networkx_edge_labels(Graph,ax=ax,pos=fixedpos,edge_labels=edgeLabels,font_color='red')
 
 
 # Function to continually update the plot so long as onOff=True
@@ -81,14 +79,10 @@ def updateGraph(val):
     for i in range(nEdges):
         ks[i] = sliders[i].val
         widths = np.append(ks[1:5],[ks[6],ks[5],ks[7:]])
-        #widths[4] = ks[6]
-        #widths[5] = ks[5]
-        print(widths)
     while onOff:
         trange = np.linspace(time,time+20*dt,num=20,endpoint=False)
         output = odeint(SecretoryPathwayODEs,output[-1,:],trange)
         time = time+20*dt
-        #print(output)
         ax.cla()
         nx.draw_networkx_nodes(Graph,ax=ax,pos=fixedpos,node_size=output[-1,:6]*5000)
         nx.draw_networkx_labels(Graph,ax=ax,pos=fixedpos)
